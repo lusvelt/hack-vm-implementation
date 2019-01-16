@@ -1,4 +1,6 @@
 *.out
+*.exe
+*.o
 .vscode
 *.asm
 *.vm
