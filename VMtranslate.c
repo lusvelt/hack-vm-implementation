@@ -1,14 +1,16 @@
 #include "includes.h"
 #include "helper.h"
 #include "parser.h"
+#include "codeWriter.h"
 
 int main(int argc, char** argv) {
     checkAndLoadArgs(argc, argv);
-    initializeParser(inputFileName, outputFileName);
+    initializeParser(inputFileName);
+    initializeCodeWriter(outputFileName);
 
     while (hasMoreCommands()) {
         advance();
-        fprintf(fout, "%s\n", currentCommand);
+        translate();
     }
 
     saveChanges();    

@@ -2,15 +2,14 @@
 #define _PARSER_H_
 
 #include "includes.h"
-
-#include "includes.h"
 #include "helper.h"
 #include "parser.h"
 
-FILE *fin, *fout;
+FILE *fin;
 char currentCommand[COMMAND_MAX_LENGTH];
-char inputFileName[FILE_NAMES_MAX_LENGTH], outputFileName[FILE_NAMES_MAX_LENGTH];
+char inputFileName[FILE_NAMES_MAX_LENGTH];
 int currentLine;
+char **args;
 
 enum commandType {
     C_ARITHMETIC,
@@ -37,21 +36,28 @@ enum memorySegment {
 
 struct command_t {
     enum commandType type;
-    char* arg1;
-    int arg2;
+    enum memorySegment segment;
+    int index;
+    char label[SYMBOL_MAX_LENGTH];
+    int vars;
+    char** args;
 };
 
 struct command_t command;
 
-void initializeParser(const char *inputFileName, const char *outputFileName);
+void initializeParser(const char *inputFileName);
 int hasMoreCommands();
 void scanIgnoreSpaces(char *c, int *comment, const int stopAtNewLine);
 void throwError(const char *error);
 int advance();
-void parseCommand();
-void checkCommand();
+char** splitBySpaces(char s[]);
+void checkArguments(int expected);
+enum memorySegment getSegment(char s[]);
+void checkIndex(int index, int max);
+int getIndex(char s[]);
+int getVars(char s[]);
+void parseAndCheckCommand();
 char* arg1();
 char* arg2();
-void saveChanges();
 
 #endif
