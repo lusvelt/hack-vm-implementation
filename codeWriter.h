@@ -8,6 +8,7 @@
 FILE *fout;
 char outputFileName[FILE_NAMES_MAX_LENGTH];
 
+void writeInit();
 void initializeCodeWriter(const char* outputFileName);
 void setFileName(const char* fileName);
 void prepareOperation();
@@ -21,7 +22,12 @@ void operate(const char instructions[], int isBinary, ...);
 void compare(const char jumpMnemonic[]);
 
 void writeArithmetic(const char* command);
+void push(int index, char address[]);
+void pop(int index, char address[]);
 void writePushPop(enum commandType type, enum memorySegment segment, int index);
+void writeLabel(char label[]);
+void writeGoto(char label[]);
+void writeIf(char label[]);
 void translate();
 void close();
 
