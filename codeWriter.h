@@ -7,6 +7,9 @@
 
 FILE *fout;
 char outputFileName[FILE_NAMES_MAX_LENGTH];
+char currentFunction[SYMBOL_MAX_LENGTH];
+int comparisonsCount;
+int callsCount;
 
 void writeInit();
 void initializeCodeWriter(const char* outputFileName);
@@ -28,6 +31,9 @@ void writePushPop(enum commandType type, enum memorySegment segment, int index);
 void writeLabel(char label[]);
 void writeGoto(char label[]);
 void writeIf(char label[]);
+void writeCall(char functionName[], int numArgs);
+void writeReturn();
+void writeFunction(char functionName[], int numLocals);
 void translate();
 void close();
 
