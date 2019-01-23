@@ -61,7 +61,7 @@ void compare(const char jumpMnemonic[]) {
 
 void writeArithmetic(const char* command) {
     if (strcmp(command, "add") == 0)
-        operate("M=M+D\n", 1);
+        operate("M=D+M\n", 1);
     else if (strcmp(command, "sub") == 0)
         operate("M=M-D\n", 1);
     else if (strcmp(command, "neg") == 0)
@@ -73,9 +73,9 @@ void writeArithmetic(const char* command) {
     else if (strcmp(command, "lt") == 0)
         compare("JLT");
     else if (strcmp(command, "and") == 0)
-        operate("M=M&D\n", 1);
+        operate("M=D&M\n", 1);
     else if (strcmp(command, "or") == 0)
-        operate("M=M|D\n", 1);
+        operate("M=D|M\n", 1);
     else if (strcmp(command, "not") == 0)
         operate("M=!M\n", 0);        
 }
@@ -89,7 +89,7 @@ void pushConstant(int constant) {
 }
 
 void pushLabel(char label[]) {
-    fprintf(fout, "@%s\nD=A\n@SP\nA=M\nM=D\nD=A+1\n@SP\nM=D\n", label);
+    fprintf(fout, "@%s\nD=M\n@SP\nA=M\nM=D\nD=A+1\n@SP\nM=D\n", label, label);
 }
 
 void pop(int index, char address[]) {
@@ -101,7 +101,7 @@ void writePushPop(enum commandType type, enum memorySegment segment, int index) 
         if (segment == M_CONSTANT)
             pushConstant(index);
         else if (segment == M_STATIC)
-            fprintf(fout, "@%d\nD=A\n@16\nA=D+A\nD=M\n@SP\nA=M\nM=D\nD=A+1\n@SP\nM=D\n", index);
+            fprintf(fout, "@static:%d\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n", index);
         else if (segment == M_ARGUMENT)
             push(index, "ARG");
         else if (segment == M_LOCAL)
@@ -110,7 +110,7 @@ void writePushPop(enum commandType type, enum memorySegment segment, int index) 
         if (segment == M_CONSTANT)
             throwError("Cannot pop from segment 'constant'");
         else if (segment == M_STATIC)
-            fprintf(fout, "@%d\nD=A\n@16\nD=D+A\n@R5\nM=D\n@SP\nAM=M-1\nD=M\n@R5\nA=M\nM=D\n", index);
+            fprintf(fout, "@SP\nAM=M-1\nD=M\n@static:%d\nM=D\n", index);
         else if (segment == M_ARGUMENT)
             pop(index, "ARG");
         else if (segment == M_LOCAL)
@@ -119,15 +119,15 @@ void writePushPop(enum commandType type, enum memorySegment segment, int index) 
 }
 
 void writeLabel(char label[]) {
-    fprintf(fout, "(%s$%s)\n", currentFunction, label);
+    fprintf(fout, "(%s$%s)\n", currentFunction, label, label);
 }
 
 void writeGoto(char label[]) {
-    fprintf(fout, "@%s\n0;JMP\n", label);
+    fprintf(fout, "@%s$%s\n0;JMP\n", currentFunction, label);
 }
 
 void writeIf(char label[]) {
-    fprintf(fout, "@SP\nA=M-1\nD=M\n@%s\nD;JNE\n", label);
+    fprintf(fout, "@SP\nAM=M-1\nD=M\n@%s$%s\nD;JNE\n", currentFunction, label);
 }
 
 void writeCall(char functionName[], int numArgs) {
@@ -139,35 +139,25 @@ void writeCall(char functionName[], int numArgs) {
     fprintf(fout, "@%d\nD=A\n@5\nD=D+A\n@SP\nD=M-D\n@ARG\nM=D\n", numArgs);
     fprintf(fout, "@SP\nD=M\n@LCL\nM=D\n");
     fprintf(fout, "@%s\n0;JMP\n", functionName);
-    fprintf(fout, "(return:%d)", callsCount);
+    fprintf(fout, "(return:%d)\n", callsCount);
 
     callsCount++;
 }
 
 void writeReturn() {
-    if (strcmp(currentFunction, "") == 0)
-        throwError("Cannot return outside of a function");
-
     fprintf(fout, "@LCL\nD=M\n@R6\nM=D\n");
-    fprintf(fout, "@5\nD=M\n@R6\nA=M-D\nD=M\n@R7\nM=D\n");
-    fprintf(fout, "@SP\nA=M-1\nD=M\n@ARG\nM=D\n");
+    fprintf(fout, "@5\nD=A\n@R6\nA=M-D\nD=M\n@R7\nM=D\n");
+    fprintf(fout, "@SP\nA=M-1\nD=M\n@ARG\nA=M\nM=D\n");
     fprintf(fout, "@ARG\nD=M+1\n@SP\nM=D\n");
     fprintf(fout, "@R6\nAM=M-1\nD=M\n@THAT\nM=D\n");
     fprintf(fout, "@R6\nAM=M-1\nD=M\n@THIS\nM=D\n");
     fprintf(fout, "@R6\nAM=M-1\nD=M\n@ARG\nM=D\n");
     fprintf(fout, "@R6\nAM=M-1\nD=M\n@LCL\nM=D\n");
     fprintf(fout, "@R7\nA=M\n0;JMP\n");
-
-    fprintf(fout, "(end_%s)", currentFunction);
-    strcpy(currentFunction, ""); 
 }
 
 void writeFunction(char functionName[], int numLocals) {
-    if (strcmp(currentFunction, "") != 0)
-        throwError("Cannot declare a function inside another function");
-
     strcpy(currentFunction, functionName);
-    fprintf(fout, "@end_%s\n0;JMP\n", currentFunction);
     fprintf(fout, "(%s)\n", functionName);
 
     for (int i = 0; i < numLocals; i++)
@@ -186,7 +176,7 @@ void translate() {
     else if (command.type == C_IF)
         writeIf(command.label);
     else if (command.type == C_CALL)
-        writeCall(command.label, command.args);
+        writeCall(command.label, command.vars);
     else if (command.type == C_RETURN)
         writeReturn();
     else if (command.type == C_FUNCTION)
@@ -194,8 +184,5 @@ void translate() {
 }
 
 void close() {
-    if (strcmp(currentFunction, "") != 0)
-        throwError("Missing return command at the end of function declaration");
-
     fclose(fout);
 }

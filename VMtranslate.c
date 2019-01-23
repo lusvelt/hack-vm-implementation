@@ -9,8 +9,8 @@ int main(int argc, char** argv) {
     initializeCodeWriter(outputFileName);
 
     while (hasMoreCommands()) {
-        advance();
-        translate();
+        if (advance())
+            translate();
     }
 
     saveChanges();    

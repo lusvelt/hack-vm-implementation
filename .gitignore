@@ -7,3 +7,7 @@
 .vscode
 *.asm
 *.vm
+*.tst
+*.cmp
+*.zip
+*.sh

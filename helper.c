@@ -16,7 +16,7 @@ void checkAndLoadArgs(const int argc, char **argv) {
         }
     }
 
-    strcpy(inputFileName, "test.vm");
+    strcpy(inputFileName, argv[1]);
     if (argc < 3) {
         int count = 0;
         int slashes = 0;
@@ -39,7 +39,7 @@ void checkAndLoadArgs(const int argc, char **argv) {
             outputFileName[count - start] = inputFileName[count];
             count++;
         }
-        strcpy(outputFileName + count - start, ".asm");
+        strcat(outputFileName, ".asm");
     } else
         strcpy(outputFileName, argv[2]);
 }

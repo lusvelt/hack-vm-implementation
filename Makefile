@@ -17,4 +17,4 @@ debug:
 	gcc -g -O0 VMtranslate.c helper.c parser.c codeWriter.c
 
 clean:
-	rm *.o VMtranslate *.out || del /Q /S *.o VMtranslate.exe
+	rm *.o VMtranslate *.out || del /Q /S *.o VMtranslate.exe *.out

@@ -33,9 +33,8 @@ void scanTrimSpaces(char* c, int* comment, const int alreadyStarted) {
         if (*c == '\n') {
             currentLine++;
             *comment = 0;
-
         }
-    } while (!alreadyStarted && *c == '\n' && hasMoreCommands());
+    } while (!alreadyStarted && (*c == '\n' || *c == '\r') && hasMoreCommands());
 }
 
 void throwError(const char* error) {
@@ -56,10 +55,10 @@ int advance() {
         if (c == '/') comment++;
         else if (hasMoreCommands()) {
             if (comment == 1) comment = 0;
-            if (c != '\n' && !comment)
+            if ((c != '\n' && c != '\r' && c != '\t') && !comment)
                 currentCommand[count++] = c;
         }
-    } while (c != '\n' && count < COMMAND_MAX_LENGTH && hasMoreCommands());
+    } while ((c != '\n' && c != '\r') && count < COMMAND_MAX_LENGTH && hasMoreCommands());
 
     if (!hasMoreCommands() && count == 0)
         return 0;
