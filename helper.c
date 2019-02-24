@@ -16,27 +16,27 @@ void checkAndLoadArgs(const int argc, char **argv) {
         }
     }
 
-    strcpy(inputFileName, argv[1]);
+    strcpy(input, argv[1]);
     if (argc < 3) {
         int count = 0;
         int slashes = 0;
 
-        while (inputFileName[count] != '\0') {
-            if (inputFileName[count] == '\\' || inputFileName[count] == '/')
+        while (input[count] != '\0') {
+            if (input[count] == '\\' || input[count] == '/')
                 slashes++;
             count++;
         }
 
         count = 0;
-        while (slashes > 0 && inputFileName[count] != '\0') {
-            if (inputFileName[count] == '\\' || inputFileName[count] == '/')
+        while (slashes > 0 && input[count] != '\0') {
+            if (input[count] == '\\' || input[count] == '/')
                 slashes--;
             count++;
         }
 
         int start = count;
-        while (inputFileName[count] != '.' && inputFileName[count] != '\0' && count < FILE_NAMES_MAX_LENGTH - 5) {
-            outputFileName[count - start] = inputFileName[count];
+        while (input[count] != '.' && input[count] != '\0' && count < FILE_NAMES_MAX_LENGTH - 5) {
+            outputFileName[count - start] = input[count];
             count++;
         }
         strcat(outputFileName, ".asm");

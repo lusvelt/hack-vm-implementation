@@ -1,19 +1,46 @@
+#include <sys/types.h>
+#include <dirent.h>
+
 #include "includes.h"
 #include "helper.h"
 #include "parser.h"
+#include "codeWriter.h"
 
+DIR *dp;
+char files[MAX_FILES][FILE_NAMES_MAX_LENGTH];
+struct dirent *ep;
 FILE *fin;
 char currentCommand[COMMAND_MAX_LENGTH];
 int currentLine;
+char input[FILE_NAMES_MAX_LENGTH];
+int filesCount;
+int currentFile;
 
 struct command_t command;
 
-void initializeParser(const char* inputFileName) {
-    fin = fopen(inputFileName, "r");
+void initializeParser(const char* input) {
+    dp = opendir(input);
+    filesCount = 0;
 
-    if (fin == NULL) {
-        printf("The specified input file was not found\n");
-        exit(EXIT_FAILURE);
+    if (dp != NULL) {
+        while ((ep = readdir(dp))) {
+            if (ep->d_name[0] != '.') {
+                strcpy(files[filesCount], input);
+                strcat(files[filesCount], "/");
+                strcat(files[filesCount], ep->d_name);
+                filesCount++;
+            }
+        }
+        closedir(dp);
+        fin = fopen(files[0], "r");
+        currentFile = 0;
+    } else {
+        fin = fopen(input, "r");
+
+        if (fin == NULL) {
+            printf("The specified input file or directory was not found\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     strcpy(currentCommand, "");
@@ -21,7 +48,7 @@ void initializeParser(const char* inputFileName) {
 }
 
 int hasMoreCommands() {
-    return !feof(fin);
+    return !feof(fin) && currentFile < filesCount;
 }
 
 void scanTrimSpaces(char* c, int* comment, const int alreadyStarted) {
@@ -60,8 +87,9 @@ int advance() {
         }
     } while ((c != '\n' && c != '\r') && count < COMMAND_MAX_LENGTH && hasMoreCommands());
 
-    if (!hasMoreCommands() && count == 0)
+    if (!hasMoreCommands() && count == 0) {
         return 0;
+    }
 
     if (count == COMMAND_MAX_LENGTH)
         throwError("The instruction contains too many characters");
@@ -135,6 +163,7 @@ enum memorySegment getSegment(char s[]) {
     else if (strcmp(s, "pointer") == 0) return M_POINTER;
     else if (strcmp(s, "temp") == 0) return M_TEMP;
     else throwError("Unknown memory segment");
+    return 0;
 }
 
 void checkIndex(int index, int max) {
@@ -159,6 +188,7 @@ int getIndex(char s[]) {
         
         return index;
     }
+    return -1;
 }
 
 int getVars(char s[]) {
@@ -167,6 +197,7 @@ int getVars(char s[]) {
     if (vars < 0 || vars >= 65536)
         throwError("Invalid local vars number");
     else return vars;
+    return 0;
 }
 
 void parseAndCheckCommand() {
@@ -230,4 +261,13 @@ char* arg1() {
 
 char* arg2() {
     return command.args[2];
+}
+
+void nextFile() {
+    currentFile++;
+    if (currentFile < filesCount) {
+        fin = fopen(files[currentFile], "r");
+        currentLine = 0;
+    }
+    initializeStatics();
 }

@@ -1,15 +1,21 @@
 #ifndef _PARSER_H_
 #define _PARSER_H_
 
+#include <sys/types.h>
+#include <dirent.h>
 #include "includes.h"
 #include "helper.h"
 #include "parser.h"
 
+DIR *dp;
+char files[MAX_FILES][FILE_NAMES_MAX_LENGTH];
 FILE *fin;
 char currentCommand[COMMAND_MAX_LENGTH];
 char inputFileName[FILE_NAMES_MAX_LENGTH];
 int currentLine;
-char **args;
+int filesCount;
+int currentFile;
+char input[FILE_NAMES_MAX_LENGTH];
 
 enum commandType {
     C_ARITHMETIC,
@@ -45,7 +51,7 @@ struct command_t {
 
 struct command_t command;
 
-void initializeParser(const char *inputFileName);
+void initializeParser(const char *input);
 int hasMoreCommands();
 void scanIgnoreSpaces(char *c, int *comment, const int stopAtNewLine);
 void throwError(const char *error);
@@ -59,5 +65,6 @@ int getVars(char s[]);
 void parseAndCheckCommand();
 char* arg1();
 char* arg2();
+void nextFile();
 
 #endif

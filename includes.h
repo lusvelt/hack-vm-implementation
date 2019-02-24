@@ -2,6 +2,7 @@
 #define _INCLUDES_H_
 
 #define FILE_NAMES_MAX_LENGTH 256
+#define MAX_FILES 1024
 #define SYMBOL_MAX_LENGTH 64
 #define COMMAND_MAX_LENGTH 73
 #include <stdio.h>

@@ -5,12 +5,14 @@
 
 int main(int argc, char** argv) {
     checkAndLoadArgs(argc, argv);
-    initializeParser(inputFileName);
+    initializeParser(input);
     initializeCodeWriter(outputFileName);
 
     while (hasMoreCommands()) {
         if (advance())
             translate();
+        if (!hasMoreCommands())
+            nextFile();
     }
 
     saveChanges();    
